@@ -3,8 +3,8 @@ const router = express.Router();
 const {getBookings,setBookings, changeBookings, deleteBookings} = require('../controllers/bookingsController');
 
 
-router.route('/').get(getBookings).post(setBookings)
-router.route('/:id').put(changeBookings).delete(deleteBookings)
+router.route('/locations/').get(getBookings).post(setBookings)
+router.route('/locations/:id').put(changeBookings).delete(deleteBookings)
 
 
 module.exports = router

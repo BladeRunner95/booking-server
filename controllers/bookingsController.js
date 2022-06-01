@@ -11,7 +11,7 @@ const getBookings = asyncHandler(async (req, res) => {
 const setBookings = asyncHandler(async (req, res) => {
     if (!req.body.text) {
         res.status(400)
-            throw new Error('Please add a pipi field')
+            throw new Error('Please add a text field')
     } else {
         const booking = await Booking.create({
             text: req.body.text
@@ -34,7 +34,7 @@ const changeBookings = asyncHandler(async (req, res) => {
 })
 //DELETE /api/bookings/id
 const deleteBookings = asyncHandler(async (req, res) => {
-    const booking = Booking.findById(req.params.id)
+    const booking = await Booking.findById(req.params.id)
     if (!booking) {
         res.status(400)
         throw new Error('Booking not found')

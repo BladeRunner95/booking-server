@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 
-app.use('/api/bookings', require('./routes/getBookings'));
+app.use('/api/bookings', require('./routes/getFilters'));
 
 app.use(errorHandler)
 
