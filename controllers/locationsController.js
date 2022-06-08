@@ -18,13 +18,16 @@ const getLocation = asyncHandler(async (req, res) => {
     if (!location) {
         res.status(400);
         throw new Error('Location not found');
+    } else {
+        res.status(200).json(location);
     }
-    res.status(200).json(location);
 })
 
 //GET all locations by title matched api/locations/:title
 const getLocationsNames = asyncHandler(async (req, res) => {
     const locations = await Locations.find({title: req.params.title});
+    //after all 'Tel-Aviv' found check if reservations don't contain filters.stored.startDate && filters.stored.finishDate
+    //filter them and return only the studios that don't have filters.stored date
     if (!locations) {
         res.status(400);
         throw new Error('Location not found');

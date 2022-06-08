@@ -5,7 +5,7 @@ const {getLocations, getLocation, getLocationsNames, setLocation, changeLocation
 
 
 router.route('/').get(getLocations).post(setLocation)
-router.route('/:title').get(getLocationsNames)
+router.route('/byName/:title').get(getLocationsNames)
 router.route('/:id').get(getLocation).put(changeLocation).delete(deleteLocation)
 
 
