@@ -9,12 +9,15 @@ const getBookings = asyncHandler(async (req, res) => {
 })
 //SET /api/bookings
 const setBookings = asyncHandler(async (req, res) => {
-    if (!req.body.text) {
+    if (!req.body.startDate && !req.body.finishDate) {
         res.status(400)
-            throw new Error('Please add a text field')
+            throw new Error('Please add a date field')
     } else {
         const booking = await Booking.create({
-            text: req.body.text
+            startDate: req.body.startDate,
+            finishDate: req.body.finishDate,
+            location: req.body.location,
+            user: req.body.user,
         })
         res.status(200).json(booking)
     }
