@@ -1,11 +1,9 @@
 const jwt = require('jsonwebtoken');
 
 const {errorHandler} = require('./errorMiddleware');
-// const asyncHandler = require('express-async-handler')
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies.access_token;
-    console.log(token)
     if(!token) {
         throw new Error('You are not authenticated')
     }

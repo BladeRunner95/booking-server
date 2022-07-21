@@ -39,7 +39,7 @@ app.post('/create-checkout-session', async (req, res) => {
 app.use(cors({
     origin: 'http://localhost:3000',
     // methods: ['GET', 'POST', 'PUT'],
-    // credentials: true
+    credentials: true
 }))
 //middlewares
 app.use(cookieParser());

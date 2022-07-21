@@ -10,11 +10,8 @@ const getUsers = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Users not found');
     } else {
-        res.append('X-Total-Count', 20);
+        res.append('X-Total-Count', users.length);
         res.append('Access-Control-Expose-Headers', 'X-Total-Count');
-        // res.header('X-Total-Count', '100');
-        console.log(users.map(v=> ({...v}) ));
-        // const convertedId = users.map(resource => ({...resource, id: resource._id }))
         res.status(200).json(users.map(resource => ({...resource, id: resource._id })));
     }
 
@@ -90,7 +87,9 @@ const login = asyncHandler(async (req, res) => {
         const token = jwt.sign({id: user._id, isAdmin: user.isAdmin}, process.env.JWT_SECRET);
         const { password, isAdmin, ...rest } = user._doc;
         res.cookie("access_token", token, {
-            httpOnly: true,
+            //expires: ,
+            httpOnly: false,
+            //secure: NODE_ENV === 'production' ? true: false
         }).status(200).json({...rest});
     }
 })
