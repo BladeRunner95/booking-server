@@ -28,20 +28,32 @@ const getUser = asyncHandler(async (req, res) => {
     }
 })
 
-//SET /api/auth
+//SET register /api/auth
 const setUser = asyncHandler(async (req, res) => {
-    if (!req.body || !req.body.password) {
-        res.status(400)
-        throw new Error('Please add required fields')
-    } else {
-        const salt = bcrypt.genSaltSync(10);
-        const hash = bcrypt.hashSync(req.body.password, salt);
-        const user = await User.create({
-            username: req.body.username,
-            email: req.body.email,
-            password: hash
-        })
-        res.status(200).json(user)
+    try {
+        if (!req.body || !req.body.password) {
+            res.status(400)
+            throw new Error('Please add required fields')
+        } else {
+            const salt = bcrypt.genSaltSync(10);
+            const hash = bcrypt.hashSync(req.body.password, salt);
+            const user = await User.create({
+                username: req.body.username,
+                email: req.body.email,
+                password: hash
+            })
+            res.status(200).json(user);
+        }
+    } catch (e) {
+        if (e.code === 11000) {
+            res.status(500);
+            const exists = Object.keys(e.keyValue).toString();
+            res.send({
+                type: exists,
+                message: `${exists} already exist`
+            });
+            throw new Error(`${exists} already exist`);
+        }
     }
 })
 
@@ -73,16 +85,19 @@ const login = asyncHandler(async (req, res) => {
     const user = await User.findOne({username: req.body.username});
     if (!user) {
         res.status(400);
-        throw new Error('User not found');
+        res.send('User not found');
+        // throw new Error('User not found');
     } else {
         if (!req.body.password) {
             res.status(400);
-            throw new Error('missing password');
+            res.send('missing password')
+            // throw new Error('missing password');
         }
         const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
         if (!isPasswordCorrect) {
             res.status(400)
-            throw new Error('Wrong password or username')
+            res.send('Wrong password or username')
+            // throw new Error('Wrong password or username')
         }
         const token = jwt.sign({id: user._id, isAdmin: user.isAdmin}, process.env.JWT_SECRET);
         const { password, isAdmin, ...rest } = user._doc;
