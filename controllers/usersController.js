@@ -1,7 +1,9 @@
-const asyncHandler = require('express-async-handler')
-const bcrypt = require('bcryptjs')
-const jwt = require('jsonwebtoken')
-const User = require('../models/userModel')
+const asyncHandler = require('express-async-handler');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/userModel');
+const JWT_EXPIRES = process.env.JWT_EXPIRES;
+const JWT_EXPIRATION_NUM = process.env.JWT_EXPIRATION_NUM;
 
 //GET all /api/register
 const getUsers = asyncHandler(async (req, res) => {
@@ -82,27 +84,36 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 //POST login /api/login
 const login = asyncHandler(async (req, res) => {
-    const user = await User.findOne({username: req.body.username});
+    let errorMessage = {
+        type: 'credentials',
+        message: 'Invalid log in'
+    };
+    const user = await User.findOne({email: req.body.email});
     if (!user) {
         res.status(400);
-        res.send('User not found');
+        res.send(errorMessage);
+        // res.send('User not found');
         // throw new Error('User not found');
     } else {
         if (!req.body.password) {
             res.status(400);
-            res.send('missing password')
+            res.send('missing password');
             // throw new Error('missing password');
         }
-        const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password)
+        const isPasswordCorrect = await bcrypt.compare(req.body.password, user.password);
         if (!isPasswordCorrect) {
-            res.status(400)
-            res.send('Wrong password or username')
+            res.status(400);
+            res.send(errorMessage);
             // throw new Error('Wrong password or username')
         }
-        const token = jwt.sign({id: user._id, isAdmin: user.isAdmin}, process.env.JWT_SECRET);
+        const token = jwt.sign({id: user._id, isAdmin: user.isAdmin}, process.env.JWT_SECRET, {
+            expiresIn: JWT_EXPIRES,
+        });
+        console.log(JWT_EXPIRATION_NUM);
         const { password, isAdmin, ...rest } = user._doc;
         res.cookie("access_token", token, {
-            //expires: ,
+            // expiresIn: '10s',
+            expires: new Date(Date.now() + parseInt(JWT_EXPIRATION_NUM)),
             httpOnly: false,
             //secure: NODE_ENV === 'production' ? true: false
         }).status(200).json({...rest});
