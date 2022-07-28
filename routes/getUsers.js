@@ -4,7 +4,7 @@ const {getUsers, getUser, setUser, changeUser, deleteUser, login} = require('../
 const {verifyToken, verifyUser, verifyAdmin} = require("../middleware/verifyToken");
 
 
-router.route('/users').get(getUsers).post(setUser)
+router.route('/users').get(verifyAdmin, getUsers).post(setUser)
 router.route('/users/:id').get(verifyUser, getUser).put(verifyUser, changeUser).delete(verifyUser, deleteUser)
 router.route('/login').post(login)
 router.route('/checkauthentication').get(verifyToken, (req, res, next) => {

@@ -4,7 +4,9 @@ const {errorHandler} = require('./errorMiddleware');
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies.access_token;
+    console.log(res);
     if(!token) {
+        res.send('You are not authenticated');
         throw new Error('You are not authenticated')
     }
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

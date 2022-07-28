@@ -107,7 +107,7 @@ const login = asyncHandler(async (req, res) => {
             // throw new Error('Wrong password or username')
         }
         const token = jwt.sign({id: user._id, isAdmin: user.isAdmin}, process.env.JWT_SECRET, {
-            expiresIn: JWT_EXPIRES,
+            expiresIn: '1000000',
         });
         console.log(JWT_EXPIRATION_NUM);
         const { password, isAdmin, ...rest } = user._doc;
