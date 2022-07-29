@@ -6,7 +6,7 @@ const {verifyAdmin} = require("../middleware/verifyToken");
 
 
 
-router.route('/').get(getLocations).post(verifyAdmin, setLocation)
+router.route('/').get(verifyAdmin, getLocations).post(verifyAdmin, setLocation)
 router.route('/byName/:title').get(getLocationsNames)
 router.route('/:id').get(getLocation).put(verifyAdmin, changeLocation).delete(verifyAdmin, deleteLocation)
 

@@ -9,7 +9,10 @@ const getLocations = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Locations not found');
     }
-    res.status(200).json(locations);
+    res.append('X-Total-Count', locations.length);
+    res.append('Access-Control-Expose-Headers', 'X-Total-Count');
+    res.status(200).json(locations.map(resource => ({...resource, id: resource._id })));
+    // res.status(200).json(locations);
 })
 
 //GET by id /api/locations
@@ -19,7 +22,11 @@ const getLocation = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Location not found');
     } else {
-        res.status(200).json(location);
+        res.append('X-Total-Count', location.length);
+        res.append('Access-Control-Expose-Headers', 'X-Total-Count');
+        res.status(200).json({...location.toObject(), id: location._id});
+        console.log(location)
+        // res.status(200).json(location);
     }
 })
 
@@ -56,15 +63,27 @@ const setLocation = asyncHandler(async (req, res) => {
 
 //PUT /api/locations/id
 const changeLocation = asyncHandler(async (req, res) => {
-    const location = await Locations.findById(req.params.id);
-    if (!location) {
-        res.status(400);
-        throw new Error('Location not found');
+    try {
+        const location = await Locations.findById(req.params.id);
+        if (!location) {
+            res.status(400);
+            throw new Error('Location not found');
+        }
+        const updateLocation = await Locations.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        });
+        res.append('X-Total-Count', updateLocation.length);
+        res.append('Access-Control-Expose-Headers', 'X-Total-Count');
+        // console.log(req.body);
+        // res.status(200).json(locations.map(resource => ({...resource, id: resource._id })));
+        const newObj = {...updateLocation.toObject(), id: updateLocation._id}
+        console.log('put request location')
+        // console.log(req.body)
+        res.status(200).json(newObj);
+        // res.status(200).json(req.body);
+    } catch (e) {
+        console.log("here is an error" + e );
     }
-    const updateLocation = await Location.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-    });
-    res.status(200).json(updateLocation);
 })
 //DELETE /api/locations/id
 const deleteLocation = asyncHandler(async (req, res) => {
