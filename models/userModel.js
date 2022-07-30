@@ -20,10 +20,9 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    bookings: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: Booking
-    }]
+    bookings: {
+        type: [String],
+    }
 
 }, {
     timestamps: true

@@ -5,11 +5,11 @@ const Location = require('./locationModel');
 const bookingSchema = mongoose.Schema({
     startDate: {
         type: Number,
-        required: [true, 'Please add a text value']
+        required: [true, 'Please add a valid Date']
     },
     finishDate: {
         type: Number,
-        required: [true, 'Please add a text value']
+        required: [true, 'Please add a valid Date']
     },
     location: {
         type: mongoose.Schema.Types.ObjectId,

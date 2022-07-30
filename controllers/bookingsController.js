@@ -1,6 +1,6 @@
-const asyncHandler = require('express-async-handler')
-
-const Booking = require('../models/bookingModel')
+const asyncHandler = require('express-async-handler');
+const Booking = require('../models/bookingModel');
+const User = require('../models/userModel');
 
 //GET /api/bookings
 const getBookings = asyncHandler(async (req, res) => {
@@ -9,6 +9,7 @@ const getBookings = asyncHandler(async (req, res) => {
 })
 //SET /api/bookings
 const setBookings = asyncHandler(async (req, res) => {
+    const user = req.params.id;
     if (!req.body.startDate && !req.body.finishDate) {
         res.status(400)
             throw new Error('Please add a date field')
@@ -17,8 +18,15 @@ const setBookings = asyncHandler(async (req, res) => {
             startDate: req.body.startDate,
             finishDate: req.body.finishDate,
             location: req.body.location,
-            user: req.body.user,
+            user: req.params.id,
         })
+        try {
+            await User.findByIdAndUpdate(user, {
+                $push: {bookings: booking._id},
+            })
+        } catch (e) {
+            console.log('setBookings error' + e);
+        }
         res.status(200).json(booking)
     }
 })

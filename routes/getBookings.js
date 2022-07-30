@@ -4,8 +4,8 @@ const {getBookings,setBookings, changeBookings, deleteBookings} = require('../co
 const {verifyAdmin} = require("../middleware/verifyToken");
 
 
-router.route('/').get(getBookings).post(setBookings)
-router.route('/:id').put(verifyAdmin, changeBookings).delete(verifyAdmin, deleteBookings)
+router.route('/').get(getBookings)
+router.route('/:id').post(setBookings).put(verifyAdmin, changeBookings).delete(verifyAdmin, deleteBookings)
 
 
 module.exports = router

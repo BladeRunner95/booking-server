@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const JWT_EXPIRES = process.env.JWT_EXPIRES;
 const JWT_EXPIRATION_NUM = process.env.JWT_EXPIRATION_NUM;
+const {responseHandler} = require('../middleware/responseMiddleware');
 
 //GET all /api/register
 const getUsers = asyncHandler(async (req, res) => {
@@ -12,9 +13,8 @@ const getUsers = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Users not found');
     } else {
-        res.append('X-Total-Count', users.length);
-        res.append('Access-Control-Expose-Headers', 'X-Total-Count');
-        res.status(200).json(users.map(resource => ({...resource, id: resource._id })));
+        responseHandler(res, users);
+        console.log(users)
     }
 
 })
@@ -26,7 +26,7 @@ const getUser = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('User not found');
     } else {
-        res.status(200).json(user);
+        responseHandler(res, user);
     }
 })
 
@@ -61,15 +61,22 @@ const setUser = asyncHandler(async (req, res) => {
 
 //PUT /api/auth/users/id
 const changeUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-        res.status(400);
-        throw new Error('User not found');
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(400);
+            throw new Error('User not found');
+        }
+        const updateUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        });
+        console.log('updated111111 ');
+        // res.status(200).json(updateUser);
+        responseHandler(res, updateUser);
+    } catch (e) {
+        // res.send(e);
+        console.log('user updating error')
     }
-    const updateUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-    });
-    res.status(200).json(updateUser);
 })
 //DELETE /api/auth/id
 const deleteUser = asyncHandler(async (req, res) => {

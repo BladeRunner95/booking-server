@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 
 const Locations = require('../models/locationModel')
+const {responseHandler} = require("../middleware/responseMiddleware");
 
 //GET all /api/locations
 const getLocations = asyncHandler(async (req, res) => {
@@ -9,9 +10,7 @@ const getLocations = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Locations not found');
     }
-    res.append('X-Total-Count', locations.length);
-    res.append('Access-Control-Expose-Headers', 'X-Total-Count');
-    res.status(200).json(locations.map(resource => ({...resource, id: resource._id })));
+    responseHandler(res, locations)
     // res.status(200).json(locations);
 })
 
@@ -22,11 +21,7 @@ const getLocation = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Location not found');
     } else {
-        res.append('X-Total-Count', location.length);
-        res.append('Access-Control-Expose-Headers', 'X-Total-Count');
-        res.status(200).json({...location.toObject(), id: location._id});
-        console.log(location)
-        // res.status(200).json(location);
+       responseHandler(res, location);
     }
 })
 
@@ -72,15 +67,7 @@ const changeLocation = asyncHandler(async (req, res) => {
         const updateLocation = await Locations.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
         });
-        res.append('X-Total-Count', updateLocation.length);
-        res.append('Access-Control-Expose-Headers', 'X-Total-Count');
-        // console.log(req.body);
-        // res.status(200).json(locations.map(resource => ({...resource, id: resource._id })));
-        const newObj = {...updateLocation.toObject(), id: updateLocation._id}
-        console.log('put request location')
-        // console.log(req.body)
-        res.status(200).json(newObj);
-        // res.status(200).json(req.body);
+        responseHandler(res, updateLocation);
     } catch (e) {
         console.log("here is an error" + e );
     }
