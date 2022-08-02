@@ -39,20 +39,26 @@ const getLocationsNames = asyncHandler(async (req, res) => {
 
 //SET /api/locations
 const setLocation = asyncHandler(async (req, res) => {
-    if (!req.body) {
-        res.status(400)
-        throw new Error('Please add required fields')
-    } else {
-        const location = await Locations.create({
-            title: req.body.title,
-            price: req.body.price,
-            name: req.body.name,
-            capacity: req.body.capacity,
-            images: req.body.images,
-            details: req.body.details,
-            confirmedBookings: req.body.confirmedBookings
-        })
-        res.status(200).json(location)
+    try {
+        if (!req.body) {
+            res.status(400)
+            throw new Error('Please add required fields')
+        } else {
+            const location = await Locations.create({
+                title: req.body.title,
+                price: req.body.price,
+                name: req.body.name,
+                capacity: req.body.capacity,
+                images: req.body.images,
+                details: req.body.details,
+                confirmedBookings: req.body.confirmedBookings
+            })
+            res.status(200).json(location)
+        }
+    } catch (e) {
+        res.status(400);
+        res.send(e);
+        console.log('aaa ' + e)
     }
 })
 
