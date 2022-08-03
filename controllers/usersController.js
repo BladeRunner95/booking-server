@@ -13,8 +13,7 @@ const getUsers = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Users not found');
     } else {
-        responseHandler(res, users);
-        console.log(users)
+        responseHandler(res, users, true);
     }
 
 })
@@ -70,8 +69,6 @@ const changeUser = asyncHandler(async (req, res) => {
         const updateUser = await User.findByIdAndUpdate(req.params.id, req.body, {
             new: true,
         });
-        console.log('updated111111 ');
-        // res.status(200).json(updateUser);
         responseHandler(res, updateUser);
     } catch (e) {
         // res.send(e);

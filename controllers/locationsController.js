@@ -11,7 +11,6 @@ const getLocations = asyncHandler(async (req, res) => {
         throw new Error('Locations not found');
     }
     responseHandler(res, locations)
-    // res.status(200).json(locations);
 })
 
 //GET by id /api/locations
@@ -58,7 +57,6 @@ const setLocation = asyncHandler(async (req, res) => {
     } catch (e) {
         res.status(400);
         res.send(e);
-        console.log('aaa ' + e)
     }
 })
 
