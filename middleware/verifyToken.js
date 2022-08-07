@@ -6,6 +6,7 @@ const verifyToken = (req, res, next) => {
     const token = req.cookies.access_token;
     console.log(res);
     if(!token) {
+        res.status(400)
         res.send('You are not authenticated');
         throw new Error('You are not authenticated')
     }
@@ -23,7 +24,8 @@ const verifyUser = (req, res, next) => {
         if (req.user.id === req.params.id || req.user.isAdmin) {
             next();
         } else {
-            throw new Error('You are not authorized')
+            res.status(400);
+            throw new Error('You are not authorized');
         }
     })
 }

@@ -24,7 +24,7 @@ const locationsSchema = mongoose.Schema({
         type: []
     },
     confirmedBookings: {
-        type: [Date]
+        type: [Number]
     }
 }, {
     timestamps: true
