@@ -13,7 +13,6 @@ const getBookings = asyncHandler(async (req, res) => {
             throw new Error('Bookings not found');
         }
         responseHandler(res, bookings);
-        console.log(bookings)
     } catch (e) {
         console.log('catched error ' + e)
     }
@@ -29,9 +28,22 @@ const getBooking = asyncHandler(async (req, res) => {
             throw new Error('Booking not found');
         }
         responseHandler(res, booking);
-        console.log(booking)
+        // console.log(booking)
     } catch (e) {
         console.log('catched error ' + e)
+    }
+})
+
+const getBookingsByUsername = asyncHandler(async (req, res) => {
+    try {
+        const bookings = await Booking.find({user: req.params.id});
+        if (!bookings) {
+            res.status(400);
+            throw new Error('Bookings not found')
+        }
+        responseHandler(res, bookings);
+    } catch (e) {
+        console.log('get bookings by user error')
     }
 })
 
@@ -47,7 +59,7 @@ const setBookings = asyncHandler(async (req, res) => {
             finishDate: req.body.finishDate,
             location: req.body.location,
             cost: req.body.cost,
-            user: req.params.id,
+            user: req.params.id || req.body.user,
         })
         try {
             const rangeArray = [req.body.startDate, req.body.finishDate];
@@ -80,6 +92,10 @@ const deleteBookings = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Booking not found');
     }
+    await Location.updateOne({_id: booking.location}, {
+        $pullAll: {
+        confirmedBookings: [booking.startDate, booking.finishDate]}}
+    );
     await booking.remove();
     res.status(200).json({ id: req.params.id });
 })
@@ -87,6 +103,7 @@ const deleteBookings = asyncHandler(async (req, res) => {
 module.exports = {
     getBookings,
     getBooking,
+    getBookingsByUsername,
     setBookings,
     changeBookings,
     deleteBookings
