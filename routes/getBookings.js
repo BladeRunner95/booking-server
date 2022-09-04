@@ -4,7 +4,7 @@ const {getBookings, getBooking, getBookingsByUsername, setBookings, changeBookin
 const {verifyAdmin, verifyUser} = require("../middleware/verifyToken");
 
 
-router.route('/').get(getBookings).post(verifyAdmin, setBookings)
+router.route('/').get(verifyAdmin, getBookings).post(verifyAdmin, setBookings)
 router.route('/byUser/:id').get(verifyUser, getBookingsByUsername)
 router.route('/:id').get(getBooking).post(setBookings).put(verifyAdmin, changeBookings).delete(verifyAdmin, deleteBookings)
 

@@ -1,12 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const {getUsers, getUser, setUser, changeUser, deleteUser, login} = require('../controllers/usersController');
+const {getUsers, getUser, setUser, changeUser, deleteUser, login, forgotPas, resetPas, getReset} = require('../controllers/usersController');
 const {verifyToken, verifyUser, verifyAdmin} = require("../middleware/verifyToken");
 
 
 router.route('/users').get(verifyAdmin, getUsers).post(setUser)
 router.route('/users/:id').get(verifyUser, getUser).put(verifyUser, changeUser).delete(verifyUser, deleteUser)
 router.route('/login').post(login)
+router.route('/forgot').post(forgotPas)
+router.route('/resetPas/:hash').get(getReset).post(resetPas)
 router.route('/checkauthentication').get(verifyToken, (req, res, next) => {
     res.send('You are authenticated')
 })
