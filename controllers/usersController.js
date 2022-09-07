@@ -19,7 +19,6 @@ const getUsers = asyncHandler(async (req, res) => {
     } else {
         responseHandler(res, users, true);
     }
-
 })
 
 //GET by id /api/register
@@ -92,10 +91,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 //POST login /api/login
 const login = asyncHandler(async (req, res) => {
-    let errorMessage = {
-        type: 'credentials',
-        message: 'Invalid log in'
-    };
+    let errorMessage = 'Invalid log in';
     const user = await User.findOne({email: req.body.email});
     if (!user) {
         res.status(400);
@@ -121,6 +117,7 @@ const login = asyncHandler(async (req, res) => {
             httpOnly: false,
             //secure: NODE_ENV === 'production' ? true: false
         }).status(200).json({...rest});
+        //prob don't need to send user data back as I anyway fetch this when go to my profile
     }
 })
 
@@ -151,22 +148,21 @@ const resetPas = asyncHandler(async (req, res) => {
         const {hash} = req.params;
         const aHash = await AccessHash.findOne({_id: hash});
         if (!aHash || !aHash.userId) {
-            return res.status(422).send("Can't reset a password");
+            return res.status(422).send(aHash);
+        }
+        const user = await User.findById(aHash.userId);
+        if (!user || user.length <0) {
+            return res.status(422).send("Can't reset a password.");
+        }
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
+        if (isPasswordCorrect) {
+            return res.status(422).send("New password cannot be the same");
         }
         const salt = bcrypt.genSaltSync(10);
         const hashPas = bcrypt.hashSync(password, salt);
-        // const user = await User.findById(aHash.userId);
-        // if (!user || user.length <0) {
-        //     return res.status(422).send("Can't reset a password.");
-        // }
-        // if (user.password === hashPas) {
-        //     return res.status(422).send("New password cannot be the same");
-        // }
         const updatePassword = await User.findByIdAndUpdate(aHash.userId, { password: hashPas }, {
             new: true,
         });
-        await aHash.remove();
-
         try {
             const token = jwt.sign({id: updatePassword._id, isAdmin: updatePassword.isAdmin},
                 process.env.JWT_SECRET, {
@@ -177,11 +173,12 @@ const resetPas = asyncHandler(async (req, res) => {
                 expires: new Date(Date.now() + parseInt(JWT_EXPIRATION_NUM)),
                 httpOnly: false,
                 //secure: NODE_ENV === 'production' ? true: false
-            }).status(200).json({...rest});
+            }).status(200).json({...rest, message: 'Your password changed successfully'});
             // responseHandler(res, {...rest});
         } catch (e) {
             res.status(422).send('something went wrong in the log in process');
         }
+        await aHash.remove();
     } catch (e) {
         res.send('User updating error');
     }
