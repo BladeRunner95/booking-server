@@ -8,7 +8,7 @@ const JWT_EXPIRATION_NUM = process.env.JWT_EXPIRATION_NUM;
 const EXPIRATION_REMEMBER = process.env.JWT_EXPIRATION_REM;
 const {responseHandler} = require('../middleware/responseMiddleware');
 const AccessHash = require('../models/accessHashModel');
-const {sendResetPasswordEmail, sendConfirmationEmail}= require('../mailer');
+const {sendResetPasswordEmail, sendConfirmationEmail} = require('../mailer');
 
 //GET all /api/register
 const getUsers = asyncHandler(async (req, res) => {
@@ -28,7 +28,7 @@ const getUser = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('User not found');
     } else {
-        responseHandler(res, user);
+        responseHandler(res, user, true);
     }
 })
 
@@ -46,7 +46,7 @@ const setUser = asyncHandler(async (req, res) => {
                 email: req.body.email,
                 password: hash
             })
-            res.status(200).json(user);
+            responseHandler(res, user, true)
         }
     } catch (e) {
         if (e.code === 11000) {
@@ -69,10 +69,15 @@ const changeUser = asyncHandler(async (req, res) => {
             res.status(400);
             throw new Error('User not found');
         }
-        const updateUser = await User.findByIdAndUpdate(req.params.id, req.body, {
-            new: true,
-        });
-        responseHandler(res, updateUser);
+        // if (req.body.username === user.username) {
+        //     return res.status(422).send("username can't be the same");
+        // }
+        // if (req.body.email === user.email) {
+        //     return res.status(422).send("email can't be the same");
+        // }
+        const updateUser = await User.findByIdAndUpdate(req.params.id, req.body);
+        const {password, ...rest} = updateUser._doc;
+        responseHandler(res, ...rest);
     } catch (e) {
         // res.send(e);
         console.log('user updating error')
@@ -116,7 +121,7 @@ const login = asyncHandler(async (req, res) => {
             expires: new Date(Date.now() + parseInt(req.body.remember ? EXPIRATION_REMEMBER : JWT_EXPIRATION_NUM)),
             httpOnly: false,
             //secure: NODE_ENV === 'production' ? true: false
-        }).status(200).json({...rest});
+        }).status(200).json({...rest, isAdmin});
         //prob don't need to send user data back as I anyway fetch this when go to my profile
     }
 })
@@ -130,7 +135,7 @@ const forgotPas = asyncHandler(async (req, res) => {
             return res.status(422).send('User not found');
         }
         const hasHash = await AccessHash.find({userId: user._id});
-        if (hasHash && hasHash.length> 0) {
+        if (hasHash && hasHash.length > 0) {
             return res.status(422).send("Email to reset password already sent");
         }
         const hash = await AccessHash.create({userId: user._id});
@@ -151,7 +156,7 @@ const resetPas = asyncHandler(async (req, res) => {
             return res.status(422).send(aHash);
         }
         const user = await User.findById(aHash.userId);
-        if (!user || user.length <0) {
+        if (!user || user.length < 0) {
             return res.status(422).send("Can't reset a password.");
         }
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
@@ -160,7 +165,7 @@ const resetPas = asyncHandler(async (req, res) => {
         }
         const salt = bcrypt.genSaltSync(10);
         const hashPas = bcrypt.hashSync(password, salt);
-        const updatePassword = await User.findByIdAndUpdate(aHash.userId, { password: hashPas }, {
+        const updatePassword = await User.findByIdAndUpdate(aHash.userId, {password: hashPas}, {
             new: true,
         });
         try {

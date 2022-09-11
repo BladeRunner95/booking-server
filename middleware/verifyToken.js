@@ -4,7 +4,6 @@ const {errorHandler} = require('./errorMiddleware');
 
 const verifyToken = (req, res, next) => {
     const token = req.cookies.access_token;
-    console.log(res);
     if(!token) {
         res.status(400)
         res.send('You are not authenticated');
@@ -32,10 +31,12 @@ const verifyUser = (req, res, next) => {
 
 const verifyAdmin = (req, res, next) => {
     verifyToken(req, res, ()=> {
+        console.log(req.user);
         if (req.user.isAdmin) {
             next();
         } else {
-            throw new Error('You are not admin')
+            res.status(422).send('You are not admin');
+            // throw new Error('You are not admin');
         }
     })
 }

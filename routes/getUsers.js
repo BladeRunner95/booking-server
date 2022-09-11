@@ -15,7 +15,7 @@ router.route('/checkauthentication').get(verifyToken, (req, res, next) => {
 router.route('/checkuser/:id').get(verifyUser, (req, res, next) => {
     res.send('You can delete account')
 })
-router.route('/checkadmin/:id').get(verifyAdmin, (req, res, next) => {
+router.route('/checkadmin').get(verifyAdmin, (req, res, next) => {
     res.send('Hello admin, You can delete account')
 })
 

@@ -5,7 +5,6 @@ const responseHandler = (res, fetchedData, secure = false) => {
     if (Array.isArray(fetchedData)) {
         res.status(200).json(fetchedData.map(resource => {
             //can I check instance of resource object to check if it's plain object or mongoose document
-            //
                 if (secure) {
                     let {password, ...rest} = resource._doc;
                     return {...rest, id: resource._id}
@@ -15,6 +14,10 @@ const responseHandler = (res, fetchedData, secure = false) => {
             }
         ));
     } else {
+        if (secure) {
+            let {password, ...rest} = fetchedData._doc;
+            return res.status(200).json({...rest, id: fetchedData._id});
+        }
         res.status(200).json({...fetchedData.toObject(), id: fetchedData._id});
     }
 };
