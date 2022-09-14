@@ -23,9 +23,15 @@ const locationsSchema = mongoose.Schema({
     details: {
         type: []
     },
-    confirmedBookings: {
-        type: [Number]
-    }
+    confirmedBookings: [
+            {
+                startDate: {
+                    type: Number
+                },
+                finishDate: {
+                    type: Number
+                }
+            }]
 }, {
     timestamps: true
 })

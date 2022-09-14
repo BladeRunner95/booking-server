@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Booking = require('../models/bookingModel');
 const Location = require('../models/locationModel');
 const {responseHandler} = require("../middleware/responseMiddleware");
+const Locations = require("../models/locationModel");
 
 //GET /api/bookings
 const getBookings = asyncHandler(async (req, res) => {
@@ -49,27 +50,50 @@ const getBookingsByUsername = asyncHandler(async (req, res) => {
 
 //SET /api/bookings
 const setBookings = asyncHandler(async (req, res) => {
-    const location = req.body.location;
-    if (!req.body.startDate && !req.body.finishDate) {
+    const {startDate, finishDate, location, cost, user} = req.body;
+    if (!startDate && !finishDate) {
         res.status(400)
-            throw new Error('Please add a date field')
-    } else {
-        const booking = await Booking.create({
-            startDate: req.body.startDate,
-            finishDate: req.body.finishDate,
-            location: req.body.location,
-            cost: req.body.cost,
-            user: req.params.id || req.body.user,
-        })
-        try {
-            const rangeArray = [req.body.startDate, req.body.finishDate];
-            await Location.findByIdAndUpdate(location, {
-                $push: {confirmedBookings: [...rangeArray]},
-            })
-        } catch (e) {
-            console.log('setBookings error' + e);
+        throw new Error('Please add a date field')
+    }
+    try {
+        const selectLocation = await Locations.findById(location);
+        if (!selectLocation || !selectLocation.confirmedBookings) {
+            res.status(400);
+            throw new Error('Location not found');
         }
-        res.status(200).json(booking)
+        const rangeObj = {
+            startDate: startDate,
+            finishDate: finishDate
+        };
+        let list = [];
+        while (rangeObj.startDate <= rangeObj.finishDate + 1) {
+            list.push(rangeObj.startDate);
+            rangeObj.startDate = rangeObj.startDate + (60 * 60 * 1000);
+        }
+
+        const unavailableTime = selectLocation.confirmedBookings.some(dateObj => {
+            return list.includes(dateObj.startDate) || list.includes(dateObj.finishDate);
+        });
+
+        if (unavailableTime) {
+            return res.status(422).send('This time is booked');
+        }
+        await Location.updateOne(selectLocation, {
+            $push: {confirmedBookings: {
+                    startDate :startDate,
+                    finishDate :finishDate,
+                }},
+        })
+        const booking = await Booking.create({
+            startDate: startDate,
+            finishDate: finishDate,
+            location: location,
+            cost: cost,
+            user: req.params.id || user,
+        })
+        res.status(200).json(booking);
+    } catch (e) {
+        console.log(e);
     }
 })
 
@@ -93,11 +117,13 @@ const deleteBookings = asyncHandler(async (req, res) => {
         throw new Error('Booking not found');
     }
     await Location.updateOne({_id: booking.location}, {
-        $pullAll: {
-        confirmedBookings: [booking.startDate, booking.finishDate]}}
+            $pullAll: {
+                confirmedBookings: [booking.startDate, booking.finishDate]
+            }
+        }
     );
     await booking.remove();
-    res.status(200).json({ id: req.params.id });
+    res.status(200).json({id: req.params.id});
 })
 
 module.exports = {

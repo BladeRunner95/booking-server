@@ -27,17 +27,18 @@ const getLocation = asyncHandler(async (req, res) => {
 //GET all locations by title matched api/locations/:title and with free chosen time
 const getLocationsNames = asyncHandler(async (req, res) => {
     const locations = await Locations.find({title: req.params.title});
+    const {timeRange} = req.body;
     if (!locations) {
         res.status(400);
-        throw new Error('Location not found');
+        throw new Error('Locations not found');
     }
 
-    const filteredLocations = await locations.filter(location => {
-        return !location.confirmedBookings.some(date =>{
-            return req.body.timeRange.includes(date);
+    const availableLocations = await locations.filter(location => {
+        return !location.confirmedBookings.some(dateObj =>{
+            return timeRange.includes(dateObj.startDate) || timeRange.includes(dateObj.finishDate);
         })
     })
-    res.status(200).json(filteredLocations);
+    res.status(200).json(availableLocations);
 
 })
 
@@ -56,6 +57,7 @@ const setLocation = asyncHandler(async (req, res) => {
                 images: req.body.images,
                 details: req.body.details,
                 confirmedBookings: req.body.confirmedBookings
+                //remove later
             })
             res.status(200).json(location)
         }
