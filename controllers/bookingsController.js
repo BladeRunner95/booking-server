@@ -1,8 +1,8 @@
 const asyncHandler = require('express-async-handler');
 const Booking = require('../models/bookingModel');
 const Location = require('../models/locationModel');
+const User = require('../models/userModel');
 const {responseHandler} = require("../middleware/responseMiddleware");
-const Locations = require("../models/locationModel");
 
 //GET /api/bookings
 const getBookings = asyncHandler(async (req, res) => {
@@ -56,7 +56,7 @@ const setBookings = asyncHandler(async (req, res) => {
         throw new Error('Please add a date field')
     }
     try {
-        const selectLocation = await Locations.findById(location);
+        const selectLocation = await Location.findById(location);
         if (!selectLocation || !selectLocation.confirmedBookings) {
             res.status(400);
             throw new Error('Location not found');
@@ -66,11 +66,11 @@ const setBookings = asyncHandler(async (req, res) => {
             finishDate: finishDate
         };
         let list = [];
-        while (rangeObj.startDate <= rangeObj.finishDate + 1) {
+        while (rangeObj.startDate <= rangeObj.finishDate) {
             list.push(rangeObj.startDate);
             rangeObj.startDate = rangeObj.startDate + (60 * 60 * 1000);
         }
-
+        list.push(rangeObj.finishDate);
         const unavailableTime = selectLocation.confirmedBookings.some(dateObj => {
             return list.includes(dateObj.startDate) || list.includes(dateObj.finishDate);
         });
@@ -78,18 +78,25 @@ const setBookings = asyncHandler(async (req, res) => {
         if (unavailableTime) {
             return res.status(422).send('This time is booked');
         }
-        await Location.updateOne(selectLocation, {
-            $push: {confirmedBookings: {
-                    startDate :startDate,
-                    finishDate :finishDate,
-                }},
-        })
+        const findUser = await User.findById(req.params.id || user);
+
         const booking = await Booking.create({
             startDate: startDate,
             finishDate: finishDate,
             location: location,
+            locationName: selectLocation.title,
             cost: cost,
             user: req.params.id || user,
+            username: findUser.username
+        })
+        await Location.updateOne(selectLocation, {
+            $push: {
+                confirmedBookings: {
+                    _id: booking._id,
+                    startDate: startDate,
+                    finishDate: finishDate,
+                }
+            },
         })
         res.status(200).json(booking);
     } catch (e) {
@@ -99,12 +106,36 @@ const setBookings = asyncHandler(async (req, res) => {
 
 //PUT /api/bookings/id
 const changeBookings = asyncHandler(async (req, res) => {
-    const booking = await Booking.findById(req.params.id);
+    const {startDate, finishDate, location, cost, user} = req.body;
+    const {id} = req.params;
+    const booking = await Booking.findById(id);
     if (!booking) {
         res.status(400);
         throw new Error('Booking not found');
     }
-    const updateBooking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
+
+    //need to add check if new dates are available
+
+    await Location.findOneAndUpdate(
+        {"confirmedBookings._id": id},
+        {
+            'confirmedBookings.$.startDate': startDate,
+            'confirmedBookings.$.finishDate': finishDate,
+        }, {new: true}
+    )
+
+    const findUser = await User.findById(user);
+    const findLocation = await Location.findById(location);
+
+    const updateBooking = await Booking.findByIdAndUpdate(id, {
+        startDate: startDate,
+        finishDate: finishDate,
+        cost: cost,
+        location: location,
+        locationName: findLocation.title,
+        user: user,
+        username: findUser.username
+    }, {
         new: true,
     });
     responseHandler(res, updateBooking);
@@ -116,12 +147,8 @@ const deleteBookings = asyncHandler(async (req, res) => {
         res.status(400);
         throw new Error('Booking not found');
     }
-    await Location.updateOne({_id: booking.location}, {
-            $pullAll: {
-                confirmedBookings: [booking.startDate, booking.finishDate]
-            }
-        }
-    );
+    await Location.findOneAndUpdate({_id: booking.location},
+        {$pull: {'confirmedBookings': {_id: req.params.id}}});
     await booking.remove();
     res.status(200).json({id: req.params.id});
 })

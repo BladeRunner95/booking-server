@@ -56,8 +56,6 @@ const setLocation = asyncHandler(async (req, res) => {
                 capacity: req.body.capacity,
                 images: req.body.images,
                 details: req.body.details,
-                confirmedBookings: req.body.confirmedBookings
-                //remove later
             })
             res.status(200).json(location)
         }

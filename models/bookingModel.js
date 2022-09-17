@@ -15,6 +15,10 @@ const bookingSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: Location
     },
+    locationName: {
+        type: String,
+        required: true
+    },
     cost: {
       type: Number,
       required: [true, 'Total cost is required']
@@ -22,6 +26,10 @@ const bookingSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: User
+    },
+    username: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true
