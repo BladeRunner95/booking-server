@@ -72,7 +72,19 @@ const setBookings = asyncHandler(async (req, res) => {
         }
         list.push(rangeObj.finishDate);
         const unavailableTime = selectLocation.confirmedBookings.some(dateObj => {
-            return list.includes(dateObj.startDate) || list.includes(dateObj.finishDate);
+            // return list.includes(dateObj.startDate) || list.includes(dateObj.finishDate);
+            if (list.includes(dateObj.startDate)) {
+                return true;
+            }
+            if (list.includes(dateObj.finishDate)) {
+                return true;
+            }
+            if (list[0]> dateObj.startDate && list[list.length-1] <= dateObj.finishDate) {
+                return true;
+            }
+            if (list[0]> dateObj.startDate && list[0] < dateObj.finishDate) {
+                return true;
+            }
         });
 
         if (unavailableTime) {
@@ -100,6 +112,7 @@ const setBookings = asyncHandler(async (req, res) => {
         })
         res.status(200).json(booking);
     } catch (e) {
+        res.status(422).send(e)
         console.log(e);
     }
 })

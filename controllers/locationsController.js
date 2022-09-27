@@ -1,6 +1,6 @@
-const asyncHandler = require('express-async-handler')
+const asyncHandler = require('express-async-handler');
 
-const Locations = require('../models/locationModel')
+const Locations = require('../models/locationModel');
 const {responseHandler} = require("../middleware/responseMiddleware");
 
 //GET all /api/locations
@@ -11,7 +11,17 @@ const getLocations = asyncHandler(async (req, res) => {
         throw new Error('Locations not found');
     }
     responseHandler(res, locations)
-})
+});
+
+const getAllLocationsNames = asyncHandler(async (req, res) => {
+    const locations = await Locations.find();
+    if (!locations) {
+        res.status(400);
+        throw new Error('Locations not found');
+    }
+    let getNames = locations.map(locationObj => locationObj.title);
+    res.status(200).json([...new Set(getNames)]);
+});
 
 //GET by id /api/locations
 const getLocation = asyncHandler(async (req, res) => {
@@ -22,10 +32,10 @@ const getLocation = asyncHandler(async (req, res) => {
     } else {
        responseHandler(res, location);
     }
-})
+});
 
 //GET all locations by title matched api/locations/:title and with free chosen time
-const getLocationsNames = asyncHandler(async (req, res) => {
+const getLocationByName = asyncHandler(async (req, res) => {
     const locations = await Locations.find({title: req.params.title});
     const {timeRange} = req.body;
     if (!locations) {
@@ -35,12 +45,24 @@ const getLocationsNames = asyncHandler(async (req, res) => {
 
     const availableLocations = await locations.filter(location => {
         return !location.confirmedBookings.some(dateObj =>{
-            return timeRange.includes(dateObj.startDate) || timeRange.includes(dateObj.finishDate);
+            // return timeRange.includes(dateObj.startDate) || timeRange.includes(dateObj.finishDate);
+            if (timeRange.includes(dateObj.startDate)) {
+                return true;
+            }
+            if (timeRange.includes(dateObj.finishDate)) {
+                return true;
+            }
+            if (timeRange[0]> dateObj.startDate && timeRange[timeRange.length-1] <= dateObj.finishDate) {
+                return true;
+            }
+            if (timeRange[0]> dateObj.startDate && timeRange[0] < dateObj.finishDate) {
+                return true;
+            }
         })
     })
     res.status(200).json(availableLocations);
 
-})
+});
 
 //SET /api/locations
 const setLocation = asyncHandler(async (req, res) => {
@@ -63,7 +85,7 @@ const setLocation = asyncHandler(async (req, res) => {
         res.status(400);
         res.send(e);
     }
-})
+});
 
 //PUT /api/locations/id
 const changeLocation = asyncHandler(async (req, res) => {
@@ -80,7 +102,7 @@ const changeLocation = asyncHandler(async (req, res) => {
     } catch (e) {
         console.log("here is an error" + e );
     }
-})
+});
 //DELETE /api/locations/id
 const deleteLocation = asyncHandler(async (req, res) => {
     const location = await Locations.findById(req.params.id);
@@ -90,13 +112,14 @@ const deleteLocation = asyncHandler(async (req, res) => {
     }
     await location.remove();
     res.status(200).json({ id: req.params.id });
-})
+});
 
 module.exports = {
     getLocations,
+    getAllLocationsNames,
     getLocation,
-    getLocationsNames,
+    getLocationByName,
     setLocation,
     changeLocation,
     deleteLocation
-}
+};
